@@ -3,6 +3,7 @@ require './compiler'
 require './parser'
 require './instruction'
 require './vm'
+require './rspec_utils'
 
 include Instruction
 
@@ -14,7 +15,7 @@ def compile(program)
   exp = parse(program)
   compiler = Compiler.new
   op = compiler.compile(exp, Halt.new)
-  print "\n#{program} -> #{op} ...\n"
+#  print "\n#{program} -> #{op} ...\n"
   op
 end
 
@@ -29,38 +30,38 @@ end
 describe Compiler do
   before do
     @vm = VM.new
-    @vm.e[:true] = true
-    @vm.e[:false] = false
-    @vm.e[:+] = lambda {|*x| x.reduce {|a, b| a + b}}
+    @vm.e[SSymbol.new(:true)] = true
+    @vm.e[SSymbol.new(:false)] = false
+    @vm.e[SSymbol.new(:+)] = lambda {|*x| x.reduce {|a, b| a + b}}
   end
 
   context do
     it { 
       op = compile("1")
-      op.is_a?(Constant).should be_true
+      op.class.should eq Constant
       op2 = get_next_op(op)
-      op2.is_a?(Halt).should be_true
-      @vm.eval(op).should eq 1
+      op2.class.should eq Halt
+      class_value(@vm.eval(op)).should eq [SNumber, 1]
     }
   end
 
-  context do
-    it {
-      @vm.e[:a] = 123
-      op = compile("a")
-      op.is_a?(Refer).should be_true
-      @vm.eval(op).should eq 123
-    }
-  end
+   context do
+     it {
+       @vm.e[SSymbol.new(:a)] = SNumber.new(123)
+       op = compile("a")
+       op.class.should eq Refer
+       class_value(@vm.eval(op)).should eq [SNumber, 123]
+     }
+   end
 
   context do
     it {
       op = compile('(quote (abc "def" 123))')
-      op.is_a?(Constant).should be_true
+      op.class.should be Constant
       res = @vm.eval(op)
-      res.car.should eq :abc
-      res.cdr.car.should eq "def"
-      res.cdr.cdr.car.should eq 123
+      class_value(res.car).should eq [SSymbol, :abc]
+      class_value(res.cdr.car).should eq [SString, "def"]
+      class_value(res.cdr.cdr.car).should eq [SNumber, 123]
     }
   end
 
@@ -68,7 +69,7 @@ describe Compiler do
     it {
       op = compile('(if true "true" "false")')
       res = @vm.eval(op)
-      res.should eq "true"
+      class_value(res).should eq [SString, "true"]
     }
   end
 
@@ -76,7 +77,7 @@ describe Compiler do
     it {
       op = compile('(+ 1 2 3)')
       res = @vm.eval(op)
-      res.should eq 6
+      class_value(res).should eq [SNumber, 6]
     }
   end
 
@@ -84,7 +85,7 @@ describe Compiler do
     it {
       op = compile('(+ (+ 1 2) (+ 3 4 5))')
       res = @vm.eval(op)
-      res.should eq 15
+      class_value(res).should eq [SNumber, 15]
     }
   end
 
@@ -92,16 +93,16 @@ describe Compiler do
     it {
       op = compile('((lambda (a b) (+ a b)) 1 2)')
       res = @vm.eval(op)
-      res.should eq 3
+      class_value(res).should eq [SNumber, 3]
     }
   end
 
   context do
     it {
-      @vm.e[:a] = 1
+      @vm.e[SSymbol.new(:a)] = SNumber.new(1)
       op = compile('(set! a 2)')
       res = @vm.eval(op)
-      @vm.e[:a].should eq 2
+      class_value(@vm.e[SSymbol.new(:a)]).should eq [SNumber, 2]
     }
   end
 
@@ -112,7 +113,7 @@ describe Compiler do
     (lambda (b) (+ a b))) 10) 20)
 ')
       res = @vm.eval(op)
-      res.should eq 30
+      class_value(res).should eq [SNumber, 30]
     }
   end
 
@@ -120,7 +121,7 @@ describe Compiler do
     it {
       op = compile('(+ 1 (call/cc (lambda (k) 2)))')
       res = @vm.eval(op)
-      res.should eq 3
+      class_value(res).should eq [SNumber, 3]
     }
   end
 
@@ -128,7 +129,7 @@ describe Compiler do
     it {
       op = compile('(+ 1 (call/cc (lambda (k) (k 3))))')
       res = @vm.eval(op)
-      res.should eq 4
+      class_value(res).should eq [SNumber, 4]
     }
   end
 end

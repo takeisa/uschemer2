@@ -26,6 +26,7 @@ class Parser
 
     while TRUE
       token = @lexer.get_token
+      raise "No more tokens" unless token
       if token.type == :')' then
         break
       elsif token.type == :'.' then
@@ -50,7 +51,21 @@ class Parser
 
   def parse_atom
     token = @lexer.get_token
-    token.value
+    create_atom(token)
   end
+
+  def create_atom(token)
+    atom_class = nil
+    case token.type
+    when :number
+      atom_class = SNumber
+    when :string
+      atom_class = SString
+    when :symbol
+      atom_class = SSymbol
+    end
+    atom_class.new(token.value)
+  end
+
 end
 

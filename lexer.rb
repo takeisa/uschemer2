@@ -58,7 +58,7 @@ class Lexer
       end
 
       t.match(/(?:(?:-?[1-9][0-9]*)|0)(?:\.[0-9]+)?/) do |val|
-        Token.new(:numeric, Kernel::eval(val))
+        Token.new(:number, Kernel::eval(val))
       end
 
       t.match(/"([^"]*)"/) do |val|
@@ -70,7 +70,7 @@ class Lexer
       end
 
       t.match(/[^\s\(\)]+/) do |val|
-        Token.new(:ident, :"#{val}")
+        Token.new(:symbol, :"#{val}")
       end
     end
   end
@@ -84,7 +84,9 @@ class Lexer
 
   def read_tokens
     while @tokens.empty?
-      line = @stream.readline.chomp
+      line = @stream.gets
+      return nil unless line
+      line.chomp!
       next if line.empty?
       @tokens = @tokenizer.scan(line)
     end

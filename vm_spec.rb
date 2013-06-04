@@ -1,6 +1,8 @@
 require './vm'
 require './instruction'
 require './env'
+require './sexp'
+require './rspec_utils'
 
 include Instruction
 
@@ -18,24 +20,24 @@ describe Refer do
   before do
     @vm = VM.new
     bind0 = VarBind.new
-    bind0[:a] = "a_0"
-    bind0[:b] = "b_0"
+    bind0[ssymbol(:a)] = sstring("a_0")
+    bind0[ssymbol(:b)] = sstring("b_0")
     bind1 = VarBind.new
-    bind1[:a] = "a_1"
+    bind1[ssymbol(:a)] = sstring("a_1")
     @vm.e = @vm.e.extend_env(bind0).extend_env(bind1)
   end
 
   context do
     it {
-      operate = Refer.new(:a, Halt.new)
-      @vm.eval(operate).should eq "a_1"
+      operate = Refer.new(ssymbol(:a), Halt.new)
+      class_value(@vm.eval(operate)).should eq [SString, "a_1"]
     }
   end
 
   context do
     it { 
-      operate = Refer.new(:b, Halt.new)
-      @vm.eval(operate).should eq "b_0"
+      operate = Refer.new(ssymbol(:b), Halt.new)
+      class_value(@vm.eval(operate)).should eq [SString, "b_0"]
     }
   end
 end
@@ -47,8 +49,8 @@ describe Constant do
 
   context do
     it {
-      operate = Constant.new(123, Halt.new)
-      @vm.eval(operate).should eq 123
+      operate = Constant.new(snumber(123), Halt.new)
+      class_value(@vm.eval(operate)).should eq [SNumber, 123]
     }
   end
 end
@@ -57,14 +59,14 @@ describe Close do
   before do
     @vm = VM.new
     bind0 = VarBind.new
-    bind0[:a] = "a_0"
-    bind0[:b] = "b_0"
+    bind0[ssymbol(:a)] = sstring("a_0")
+    bind0[ssymbol(:b)] = sstring("b_0")
     @env = @vm.e = @vm.e.extend_env(bind0)
   end
 
   context do
     it {
-      operate = Close.new([:a, :b], Return.new, Halt.new)
+      operate = Close.new([ssymbol(:a), ssymbol(:b)], Return.new, Halt.new)
       ret = @vm.eval(operate)
       ret.is_a?(Closure).should be_true
       ret.body.is_a?(Return).should be_true
@@ -98,15 +100,15 @@ end
 describe Assign do
   before do
     @vm = VM.new
-    @vm.e[:a] = 0
-    @operator = Constant.new(1, Assign.new(:a, Halt.new))
+    @vm.e[ssymbol(:a)] = snumber(0)
+    @operator = Constant.new(snumber(1), Assign.new(ssymbol(:a), Halt.new))
   end
 
   context do
     it {
-      @vm.e[:a].should eq 0
+      class_value(@vm.e[ssymbol(:a)]).should eq [SNumber, 0]
       @vm.eval(@operator)
-      @vm.e[:a].should eq 1
+      class_value(@vm.e[ssymbol(:a)]).should eq [SNumber, 1]
     }
   end
 end
@@ -135,14 +137,14 @@ describe Nuate do
     @frame1 = CallFrame.new(Halt.new, Env.new, [], @vm.s)
     @frame2 = CallFrame.new(nil, Env.new, [], @frame1)
     @vm.s = @frame2
-    @vm.e[:a] = 1
-    @operator = Nuate.new(@frame1, :a)
+    @vm.e[ssymbol(:a)] = snumber(1)
+    @operator = Nuate.new(@frame1, ssymbol(:a))
   end
 
   context do
     it {
       @vm.eval(@operator)
-      @vm.a.should eq 1
+      class_value(@vm.a).should eq [SNumber, 1]
     }
   end
 end
@@ -152,14 +154,14 @@ describe Frame do
     @vm = VM.new
     @frame1 = CallFrame.new(Halt.new, Env.new, [], @vm.s)
     @vm.s = @frame1
-    @vm.e[:a] = 1
-    @operator = Frame.new(Refer.new(:a, Return.new), Halt.new)
+    @vm.e[ssymbol(:a)] = snumber(1)
+    @operator = Frame.new(Refer.new(ssymbol(:a), Return.new), Halt.new)
   end
 
   context do
     it {
       @vm.eval(@operator)
-      @vm.a.should eq 1
+      class_value(@vm.a).should eq [SNumber, 1]
       @vm.s.should eq @frame1
     }
   end
@@ -168,13 +170,14 @@ end
 describe Argument do
   before do
     @vm = VM.new
-    @operator = Constant.new(1, Argument.new(Constant.new(2, Argument.new(Halt.new))))
+    @operator = Constant.new(snumber(1), Argument.new(Constant.new(snumber(2), Argument.new(Halt.new))))
   end
 
   context do
     it {
       @vm.eval(@operator)
-      @vm.r.should eq [1, 2]
+      class_value(@vm.r[0]).should eq [SNumber, 1]
+      class_value(@vm.r[1]).should eq [SNumber, 2]
     }
   end
 end
@@ -182,18 +185,18 @@ end
 describe Apply do
   before do
     @vm = VM.new
-    @vm.e[:+] = lambda {|a, b| a + b}
-    @vm.e[:add] = Closure.new(Frame.new(Refer.new(:a, Argument.new(Refer.new(:b, Argument.new(Refer.new(:+, Apply.new))))), Return.new), @vm.e, SCons.new(:a, SCons.new(:b)))
-    @plus_operator = Frame.new(Constant.new(2, Argument.new(Constant.new(3, Argument.new(Refer.new(:+, Apply.new))))), Halt.new)
-    @closure_operator = Frame.new(Constant.new(3, Argument.new(Constant.new(4, Argument.new(Refer.new(:add, Apply.new))))), Halt.new)
+    @vm.e[ssymbol(:+)] = lambda {|a, b| a + b}
+    @vm.e[ssymbol(:add)] = Closure.new(Frame.new(Refer.new(ssymbol(:a), Argument.new(Refer.new(ssymbol(:b), Argument.new(Refer.new(ssymbol(:+), Apply.new))))), Return.new), @vm.e, SCons.new(ssymbol(:a), SCons.new(ssymbol(:b))))
+    @plus_operator = Frame.new(Constant.new(snumber(2), Argument.new(Constant.new(snumber(3), Argument.new(Refer.new(ssymbol(:+), Apply.new))))), Halt.new)
+    @closure_operator = Frame.new(Constant.new(snumber(3), Argument.new(Constant.new(snumber(4), Argument.new(Refer.new(ssymbol(:add), Apply.new))))), Halt.new)
   end
   
   context do
-    it { @vm.eval(@plus_operator).should eq 5 }
+    it { class_value(@vm.eval(@plus_operator)).should eq [SNumber, 5] }
   end
 
   context do
-    it { @vm.eval(@closure_operator).should eq 7 }
+    it { class_value(@vm.eval(@closure_operator)).should eq [SNumber, 7] }
   end
 
 end

@@ -8,22 +8,22 @@ class VarBind
     
     index = 0
     until vars == SNil
-      @bind[vars.car] = vals[index]
+      self[vars.car] = vals[index]
       vars = vars.cdr
       index += 1
     end
   end
 
   def [](var)
-    @bind[var]
+    @bind[var.value]
   end
 
   def []=(var, val)
-    @bind[var] = val
+    @bind[var.value] = val
   end
 
   def bind?(var)
-    @bind.has_key?(var)
+    @bind.has_key?(var.value)
   end
 end
 

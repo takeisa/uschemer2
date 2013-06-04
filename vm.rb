@@ -28,7 +28,7 @@ class VM
       if @x.nil? then
         return @a
       end
-puts @x
+#puts @x
       @x.eval(self)
     end
   end

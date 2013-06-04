@@ -3,33 +3,38 @@ require './instruction'
 
 class Compiler
   def compile(exp, next_op)
-    if atom?(exp) then
-      if symbol?(exp) then
+    if exp.is_a?(SAtom) then
+      if exp.is_a?(SSymbol) then
         Refer.new(exp, next_op)
       else
         Constant.new(exp, next_op)
       end
     elsif list?(exp) then
       car = exp.car
-      if car == :quote then
-        Constant.new(exp.cdr.car, next_op)
-      elsif car == :if then
-        test_exp = exp.cdr.car
-        then_exp = exp.cdr.cdr.car
-        else_exp = exp.cdr.cdr.cdr.car
-        then_op = compile(then_exp, next_op)
-        else_op = compile(else_exp, next_op)
-        compile(test_exp, Test.new(then_op, else_op))
-      elsif car == :set! then
-        var = exp.cdr.car
-        val = exp.cdr.cdr.car
-        compile(val, Assign.new(var, next_op))
-      elsif car == :lambda then
-        vars = exp.cdr.car
-        body = exp.cdr.cdr.car
-        Close.new(vars, compile(body, Return.new), next_op)
-      elsif car == :'call/cc' then
-        compile_call_cc(exp, next_op)
+      if car.is_a?(SSymbol) then
+        symbol = car.value
+        if symbol == :quote then
+          Constant.new(exp.cdr.car, next_op)
+        elsif symbol == :if then
+          test_exp = exp.cdr.car
+          then_exp = exp.cdr.cdr.car
+          else_exp = exp.cdr.cdr.cdr.car
+          then_op = compile(then_exp, next_op)
+          else_op = compile(else_exp, next_op)
+          compile(test_exp, Test.new(then_op, else_op))
+        elsif symbol == :set! then
+          var = exp.cdr.car
+          val = exp.cdr.cdr.car
+          compile(val, Assign.new(var, next_op))
+        elsif symbol == :lambda then
+          vars = exp.cdr.car
+          body = exp.cdr.cdr.car
+          Close.new(vars, compile(body, Return.new), next_op)
+        elsif symbol == :'call/cc' then
+          compile_call_cc(exp, next_op)
+        else
+          compile_func_apply(exp, next_op)
+        end
       else
         compile_func_apply(exp, next_op)
       end
@@ -77,22 +82,6 @@ class Compiler
   def compile_call_cc(exp, next_op)
     body = exp.cdr.car
     Frame.new(Conti.new(Argument.new(compile(body, Apply.new))), next_op)
-  end
-
-  def atom?(exp)
-    number?(exp) || string?(exp) || symbol?(exp)
-  end
-
-  def number?(exp)
-    exp.is_a?(Numeric)
-  end
-
-  def string?(exp)
-    exp.is_a?(String)
-  end
-
-  def symbol?(exp)
-    exp.is_a?(Symbol)
   end
 
   def list?(exp)

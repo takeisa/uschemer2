@@ -4,39 +4,39 @@ require './sexp'
 describe VarBind do
   before do
     @bind = VarBind.new
-    @bind[:a] = "a"
-    @bind[:b] = nil
+    @bind[SSymbol.new(:a)] = "a"
+    @bind[SSymbol.new(:b)] = nil
   end
 
   context do
-    it { @bind[:a].should eq "a" }
+    it { @bind[SSymbol.new(:a)].should eq "a" }
   end
 
   context do
-    it { @bind[:b].should eq nil }
+    it { @bind[SSymbol.new(:b)].should eq nil }
   end
 
   context do
-    it { @bind[:undefined].should eq nil }
+    it { @bind[SSymbol.new(:undefined)].should eq nil }
   end
 
   context do
-    it { @bind.bind?(:a).should eq true }
+    it { @bind.bind?(SSymbol.new(:a)).should eq true }
   end
 
   context do
-    it { @bind.bind?(:b).should be_true }
+    it { @bind.bind?(SSymbol.new(:b)).should be_true }
   end
 
   context do
-    it { @bind.bind?(:undefined).should be_false }
+    it { @bind.bind?(SSymbol.new(:undefined)).should be_false }
   end
 
   context do
     it {
-      bind = VarBind.new(SCons.new(:a, SCons.new(:b)), [1, 2])
-      bind[:a].should eq 1
-      bind[:b].should eq 2
+      bind = VarBind.new(SCons.new(SSymbol.new(:a), SCons.new(SSymbol.new(:b))), [1, 2])
+      bind[SSymbol.new(:a)].should eq 1
+      bind[SSymbol.new(:b)].should eq 2
     }
   end
 
@@ -48,7 +48,7 @@ end
 def array2cons(array)
   cons = SNil
   array.reverse.each do |val|
-    cons = SCons.new(val, cons)
+    cons = SCons.new(SSymbol.new(val), cons)
   end
   cons
 end
@@ -64,10 +64,10 @@ describe Env do
       new_env = @env.extend_env(bind1)
       bind2 = VarBind.new(array2cons([:b]), [20])
       new_env = new_env.extend_env(bind2)
-      new_env[:a].should eq 10
-      new_env[:b].should eq 20
-      @env[:a].should eq nil
-      @env[:b].should eq nil
+      new_env[SSymbol.new(:a)].should eq 10
+      new_env[SSymbol.new(:b)].should eq 20
+      @env[SSymbol.new(:a)].should eq nil
+      @env[SSymbol.new(:b)].should eq nil
     }
   end
 end

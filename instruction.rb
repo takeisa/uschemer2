@@ -110,7 +110,7 @@ module Instruction
     end
 
     def continuation(s)
-      Closure.new(Nuate.new(s, :v), Env.new, SCons.new(:v))
+      Closure.new(Nuate.new(s, SSymbol.new(:v)), Env.new, SCons.new(SSymbol.new(:v)))
     end
 
     def to_s
@@ -173,7 +173,9 @@ module Instruction
   class Apply < Operator
     def eval(vm)
       if vm.a.is_a?(Proc) then
-        vm.a = vm.a.call(*vm.r)
+        rb_objs = exp_to_rb_obj(vm.r)
+        res = vm.a.call(*rb_objs)
+        vm.a = rb_obj_to_exp(res)
         vm.x = Return.new
       elsif vm.a.is_a?(Closure) then
         closure = vm.a
@@ -187,6 +189,26 @@ module Instruction
         vm.r = []
       else
         raise "not function"
+      end
+    end
+
+    def exp_to_rb_obj(exps)
+      rb_objs = []
+      exps.each do |exp|
+        rb_objs << exp.value
+      end
+      rb_objs
+    end
+
+    def rb_obj_to_exp(rb_obj)
+      if rb_obj.is_a?(Numeric) then
+        SNumber.new(rb_obj)
+      elsif rb_obj.is_a?(String) then
+        SString.new(rb_obj)
+      elsif rb_obj.is_a?(Symbol) then
+        SString.new(rb_obj)
+      else
+        raise "not support object (class:#{rb_obj.class})"
       end
     end
 

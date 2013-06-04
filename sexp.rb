@@ -1,12 +1,19 @@
-class SNilClass
+class SExp
+end
+
+class SNilClass < SExp
   def length
     0
+  end
+
+  def value
+    nil
   end
 end
 
 SNil = SNilClass.new
 
-class SCons
+class SCons < SExp
   attr_accessor :car, :cdr
 
   def initialize(car = SNil, cdr = SNil)
@@ -24,4 +31,21 @@ class SCons
     end
     len
   end
+end
+
+class SAtom < SExp
+  attr_reader :value
+
+  def initialize(value)
+    @value = value
+  end
+end
+
+class SNumber < SAtom
+end
+
+class SString < SAtom
+end
+
+class SSymbol < SAtom
 end
