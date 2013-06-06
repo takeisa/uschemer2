@@ -188,7 +188,7 @@ module Instruction
 #pp vm.e
         vm.r = []
       else
-        raise "not function"
+        raise "can not apply function #{vm.a}"
       end
     end
 

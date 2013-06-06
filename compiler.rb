@@ -1,8 +1,10 @@
 require './sexp'
 require './instruction'
 
+include Instruction
+
 class Compiler
-  def compile(exp, next_op)
+  def compile(exp, next_op = Halt.new)
     if exp.is_a?(SAtom) then
       if exp.is_a?(SSymbol) then
         Refer.new(exp, next_op)
