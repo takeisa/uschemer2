@@ -15,7 +15,9 @@ Implements based on Three Implementation Models for Scheme (http://www.cs.indian
 ## Not implemented yet
 
 * Tail call optimization
-* define special form
+
+## Support primitive functions
+Only + - * /
 
 ## Usage
 
