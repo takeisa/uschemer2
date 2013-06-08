@@ -200,3 +200,19 @@ describe Apply do
   end
 
 end
+
+describe Define do
+  before do
+    @vm = VM.new
+    @operator = Constant.new(SNumber.new(1), Define.new(SSymbol.new(:a), Halt.new))
+  end
+
+  context do
+    it {
+      @vm.eval(@operator)
+      obj = @vm.e[ssymbol(:a)]
+      obj.class.should eq SNumber
+      obj.value.should eq 1
+    }
+  end
+end

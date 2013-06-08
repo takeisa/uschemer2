@@ -24,6 +24,22 @@ class Compiler
           then_op = compile(then_exp, next_op)
           else_op = compile(else_exp, next_op)
           compile(test_exp, Test.new(then_op, else_op))
+        elsif symbol == :define then
+          if exp.cdr.car.is_a?(SSymbol) then
+            # (define var val)
+            var = exp.cdr.car
+            val = exp.cdr.cdr.car
+            compile(val, Define.new(var, next_op))
+          elsif list?(exp.cdr.car) then
+            # (define (func arg0...) body)
+            var = exp.cdr.car.car
+            args = exp.cdr.car.cdr
+            body = exp.cdr.cdr.car
+            val = SCons.new(SSymbol.new(:lambda), SCons.new(args, SCons.new(body)))
+            compile(val, Define.new(var, next_op))
+          else
+            raise "define syntax error"
+          end
         elsif symbol == :set! then
           var = exp.cdr.car
           val = exp.cdr.cdr.car

@@ -132,4 +132,43 @@ describe Compiler do
       class_value(res).should eq [SNumber, 4]
     }
   end
+
+  context do
+    it {
+      op = compile('(define a 1)')
+      res = @vm.eval(op)
+      obj = @vm.e[ssymbol(:a)]
+      obj.class.should eq SNumber
+      obj.value.should eq 1
+    }
+  end
+
+  context do
+    it {
+      op = compile('(define add (lambda (add a b) (+ a b)))')
+      res = @vm.eval(op)
+      obj = @vm.e[ssymbol(:add)]
+      obj.class.should eq Closure
+    }
+  end
+
+  context do
+    it {
+      op = compile('(define (add a b) (+ a b))')
+      res = @vm.eval(op)
+      obj = @vm.e[ssymbol(:add)]
+      obj.class.should eq Closure
+    }
+  end
+
+  context do
+    it {
+      op = compile('(define (add a b) (+ a b))')
+      @vm.eval(op)
+      op2 = compile('(add 10 20)')
+      obj = @vm.eval(op2)
+      obj.class.should eq SNumber
+      obj.value.should eq 30
+    }
+  end
 end

@@ -99,6 +99,18 @@ module Instruction
     end
   end
 
+  class Define < Operator
+    def initialize(var, x)
+      @var = var
+      @x = x
+    end
+
+    def eval(vm)
+      vm.e[@var] = vm.a
+      vm.x = @x
+    end
+  end
+
   class Conti < Operator
     def initialize(x)
       @x = x
