@@ -1,13 +1,51 @@
 class SExp
+  def atom?
+    raise "not implemented yet"
+  end
+  def list?
+    raise "not implemented yet"
+  end
 end
 
-class SNilClass < SExp
+class SAtom < SExp
+  attr_reader :value
+
+  def initialize(value)
+    @value = value
+  end
+
+  def atom?
+    true
+  end
+
+  def list?
+    false
+  end
+end
+
+class SNumber < SAtom
+end
+
+class SString < SAtom
+end
+
+class SSymbol < SAtom
+end
+
+class SNilClass < SAtom
+  def initialize
+  end
+
   def length
     0
   end
 
   def value
     nil
+  end
+
+  def list?
+    true
   end
 end
 
@@ -19,6 +57,14 @@ class SCons < SExp
   def initialize(car = SNil, cdr = SNil)
     @car = car
     @cdr = cdr
+  end
+
+  def atom?
+    false
+  end
+
+  def list?
+    true
   end
 
   def length
@@ -33,19 +79,3 @@ class SCons < SExp
   end
 end
 
-class SAtom < SExp
-  attr_reader :value
-
-  def initialize(value)
-    @value = value
-  end
-end
-
-class SNumber < SAtom
-end
-
-class SString < SAtom
-end
-
-class SSymbol < SAtom
-end

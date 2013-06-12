@@ -5,15 +5,15 @@ include Instruction
 
 class Compiler
   def compile(exp, next_op = Halt.new)
-    if exp.is_a?(SAtom) then
-      if exp.is_a?(SSymbol) then
+    if exp.atom? then
+      if symbol?(exp) then
         Refer.new(exp, next_op)
       else
         Constant.new(exp, next_op)
       end
-    elsif list?(exp) then
+    elsif exp.list? then
       car = exp.car
-      if car.is_a?(SSymbol) then
+      if symbol?(car) then
         symbol = car.value
         if symbol == :quote then
           Constant.new(exp.cdr.car, next_op)
@@ -25,12 +25,12 @@ class Compiler
           else_op = compile(else_exp, next_op)
           compile(test_exp, Test.new(then_op, else_op))
         elsif symbol == :define then
-          if exp.cdr.car.is_a?(SSymbol) then
+          if symbol?(exp.cdr.car) then
             # (define var val)
             var = exp.cdr.car
             val = exp.cdr.cdr.car
             compile(val, Define.new(var, next_op))
-          elsif list?(exp.cdr.car) then
+          elsif exp.cdr.car.list? then
             # (define (func arg0...) body)
             var = exp.cdr.car.car
             args = exp.cdr.car.cdr
@@ -102,7 +102,7 @@ class Compiler
     Frame.new(Conti.new(Argument.new(compile(body, Apply.new))), next_op)
   end
 
-  def list?(exp)
-    exp.is_a?(SCons)
+  def symbol?(exp)
+    exp.is_a?(SSymbol)
   end
 end
