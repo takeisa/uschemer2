@@ -35,7 +35,7 @@ def repl
   vm = VM.new
   init_env(vm.e)
 
-  print "Micro Schme"
+  print "Micro Scheme\n"
 
   while true
     print "> "
