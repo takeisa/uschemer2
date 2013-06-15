@@ -13,6 +13,10 @@ describe SNumber do
   context do
     it { @num.should_not be_list }
   end
+
+  context do
+    it { @num.to_s.should eq 123 }
+  end
 end
 
 describe SString do
@@ -26,6 +30,10 @@ describe SString do
 
   context do
     it { @str.should_not be_list }
+  end
+
+  context do
+    it { @str.to_s.should eq "\"abc\"" }
   end
 end
 
@@ -41,6 +49,10 @@ describe SSymbol do
   context do
     it { @sym.should_not be_list }
   end
+
+  context do
+    it { @sym.to_s.should eq "abc" }
+  end
 end
 
 describe SNil do
@@ -50,6 +62,10 @@ describe SNil do
 
   context do
     it { SNil.should be_atom }
+  end
+
+  context do
+    it { SNil.to_s.should eq "nil" }
   end
 end
 
@@ -74,4 +90,24 @@ describe SCons do
     it { SCons.new(sstring("1"), SCons.new(sstring("2"))).length.should eq 2 }
   end
 
+  context do
+    it { SCons.new(sstring("abc"), snumber(123)).to_s.should eq '("abc" . 123)' }
+  end
+
+  context do
+    it { SCons.new(sstring("abc"), SCons.new(snumber(123))).to_s.should eq '("abc" 123)' }
+  end
+
+  context do
+    it { SCons.new(sstring("abc"), SCons.new(snumber(123), SCons.new(ssymbol(:abc)))).to_s.should eq '("abc" 123 abc)' }
+  end
+
+  context do
+    it { SCons.new(sstring("abc"), SCons.new(snumber(123), ssymbol(:abc))).to_s.should eq '("abc" 123 . abc)' }
+  end
+
+  context do
+    it { SCons.new(SCons.new(sstring("abc"), SCons.new(sstring("def"))), 
+                   SCons.new(snumber(123), ssymbol(:abc))).to_s.should eq '(("abc" "def") 123 . abc)' }
+  end
 end

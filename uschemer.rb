@@ -35,6 +35,8 @@ def repl
   vm = VM.new
   init_env(vm.e)
 
+  print "Micro Schme"
+
   while true
     print "> "
 
@@ -45,7 +47,7 @@ def repl
 #    puts "operator=#{operator.inspect}\n"
 
     obj = vm.eval(operator)
-    pp obj
+    print "#{obj.to_s}\n"
   end
 end
 
